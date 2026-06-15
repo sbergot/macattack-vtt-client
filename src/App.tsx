@@ -36,6 +36,9 @@ export default function App() {
   const [zoom, setZoom] = useState<number>(1);
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [moveGuideTokenId, setMoveGuideTokenId] = useState<string | null>(null);
+  const [moveGuideOrigin, setMoveGuideOrigin] = useState<TokenPosition | null>(
+    null,
+  );
   const [mapImage] = useImage(mapImageUrl);
 
   const orderedTokens = useMemo(
@@ -67,13 +70,35 @@ export default function App() {
   const selectToken: TokenSelectHandler = (tokenId) => {
     if (tokenId !== selectedTokenId) {
       setMoveGuideTokenId(null);
+      setMoveGuideOrigin(null);
     }
     setSelectedTokenId(tokenId);
   };
 
   const activateMoveGuide: TokenActionHandler = (tokenId) => {
+    const activeToken = tokens.find((token) => token.id === tokenId);
+
     setSelectedTokenId(tokenId);
     setMoveGuideTokenId(tokenId);
+    setMoveGuideOrigin(
+      activeToken
+        ? {
+            x: activeToken.x,
+            y: activeToken.y,
+          }
+        : null,
+    );
+  };
+
+  const completeMoveGuide = (tokenId: string) => {
+    if (moveGuideTokenId === tokenId) {
+      setMoveGuideTokenId(null);
+      setMoveGuideOrigin(null);
+    }
+
+    if (selectedTokenId === tokenId) {
+      setSelectedTokenId(null);
+    }
   };
 
   const clearSelection = (event: KonvaEventObject<MouseEvent | TouchEvent>) => {
@@ -81,6 +106,7 @@ export default function App() {
     if (event.target === stage) {
       setSelectedTokenId(null);
       setMoveGuideTokenId(null);
+      setMoveGuideOrigin(null);
     }
   };
 
@@ -145,6 +171,10 @@ export default function App() {
                     onMoveAction={activateMoveGuide}
                     isSelected={selectedTokenId === token.id}
                     showMoveGuide={moveGuideTokenId === token.id}
+                    guideOrigin={
+                      moveGuideTokenId === token.id ? moveGuideOrigin : null
+                    }
+                    onMoveGuideEnd={completeMoveGuide}
                   />
                 ))}
               </Layer>
