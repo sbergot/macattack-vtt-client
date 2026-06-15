@@ -1,0 +1,27 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="900" rx="24" fill="#203040"/>
+  <rect width="1600" height="900" rx="24" fill="url(#paint0_linear)" fill-opacity="0.65"/>
+  <path d="M0 240C155 162.667 266 134 333 154C433.5 184 525 332 677 332C829 332 969 160 1125 160C1281 160 1402.5 290 1600 252" stroke="#D9E6F2" stroke-opacity="0.35" stroke-width="10" stroke-linecap="round"/>
+  <path d="M163 734C312 650 408 584 531 584C654 584 730 680 882 680C1034 680 1175 522 1297 522C1378.33 522 1479.33 560 1600 636" stroke="#F3B61F" stroke-opacity="0.4" stroke-width="12" stroke-linecap="round"/>
+  <path d="M454 0V900" stroke="#F8FAFC" stroke-opacity="0.08"/>
+  <path d="M906 0V900" stroke="#F8FAFC" stroke-opacity="0.08"/>
+  <path d="M1300 0V900" stroke="#F8FAFC" stroke-opacity="0.08"/>
+  <path d="M0 194H1600" stroke="#F8FAFC" stroke-opacity="0.08"/>
+  <path d="M0 452H1600" stroke="#F8FAFC" stroke-opacity="0.08"/>
+  <path d="M0 706H1600" stroke="#F8FAFC" stroke-opacity="0.08"/>
+  <circle cx="356" cy="266" r="98" fill="#2D4D5F"/>
+  <circle cx="1117" cy="294" r="136" fill="#385E54"/>
+  <circle cx="1298" cy="661" r="164" fill="#513B56"/>
+  <circle cx="728" cy="626" r="112" fill="#46553A"/>
+  <path d="M276 452C276 420.954 301.954 395 333 395H519C550.046 395 576 420.954 576 452V580C576 611.046 550.046 637 519 637H333C301.954 637 276 611.046 276 580V452Z" fill="#7B4B2A" fill-opacity="0.5"/>
+  <path d="M1008 120C1008 100.118 1024.12 84 1044 84H1344C1363.88 84 1380 100.118 1380 120V208C1380 227.882 1363.88 244 1344 244H1044C1024.12 244 1008 227.882 1008 208V120Z" fill="#3D4E61" fill-opacity="0.65"/>
+  <path d="M1130 544C1130 522.461 1147.46 505 1169 505H1411C1432.54 505 1450 522.461 1450 544V765C1450 786.539 1432.54 804 1411 804H1169C1147.46 804 1130 786.539 1130 765V544Z" fill="#2A3A4F" fill-opacity="0.55"/>
+  <text x="82" y="114" fill="#F8FAFC" fill-opacity="0.92" font-family="Space Grotesk, sans-serif" font-size="54" font-weight="700">Northwatch Valley</text>
+  <text x="84" y="160" fill="#F8FAFC" fill-opacity="0.62" font-family="Space Grotesk, sans-serif" font-size="24">Drag tokens and zoom to inspect the battlefield</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="118" y1="68" x2="1381" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#274B63"/>
+      <stop offset="1" stop-color="#0B132B"/>
+    </linearGradient>
+  </defs>
+</svg>
