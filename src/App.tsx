@@ -7,7 +7,12 @@ import { GlassCard } from "./components/GlassCard";
 import { Token } from "./components/Token";
 import { TokenRow } from "./components/TokenRow";
 import { ZoomButton } from "./components/ZoomButton";
-import type { TokenData, TokenPosition } from "./types/token";
+import type {
+  TokenActionHandler,
+  TokenData,
+  TokenPosition,
+  TokenSelectHandler,
+} from "./types/token";
 
 const MAP_WIDTH = 1600;
 const MAP_HEIGHT = 900;
@@ -29,6 +34,8 @@ function clampZoom(nextZoom: number): number {
 export default function App() {
   const [tokens, setTokens] = useState<TokenData[]>(initialTokens);
   const [zoom, setZoom] = useState<number>(1);
+  const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
+  const [moveGuideTokenId, setMoveGuideTokenId] = useState<string | null>(null);
   const [mapImage] = useImage(mapImageUrl);
 
   const orderedTokens = useMemo(
@@ -55,6 +62,26 @@ export default function App() {
     event.evt.preventDefault();
     const direction = event.evt.deltaY > 0 ? 1 / ZOOM_STEP : ZOOM_STEP;
     applyZoom(zoom * direction);
+  };
+
+  const selectToken: TokenSelectHandler = (tokenId) => {
+    if (tokenId !== selectedTokenId) {
+      setMoveGuideTokenId(null);
+    }
+    setSelectedTokenId(tokenId);
+  };
+
+  const activateMoveGuide: TokenActionHandler = (tokenId) => {
+    setSelectedTokenId(tokenId);
+    setMoveGuideTokenId(tokenId);
+  };
+
+  const clearSelection = (event: KonvaEventObject<MouseEvent | TouchEvent>) => {
+    const stage = event.target.getStage();
+    if (event.target === stage) {
+      setSelectedTokenId(null);
+      setMoveGuideTokenId(null);
+    }
   };
 
   return (
@@ -99,6 +126,8 @@ export default function App() {
               scaleX={zoom}
               scaleY={zoom}
               onWheel={handleWheel}
+              onMouseDown={clearSelection}
+              onTouchStart={clearSelection}
             >
               <Layer>
                 <KonvaImage
@@ -108,7 +137,15 @@ export default function App() {
                   cornerRadius={24}
                 />
                 {orderedTokens.map((token) => (
-                  <Token key={token.id} token={token} onMove={updateToken} />
+                  <Token
+                    key={token.id}
+                    token={token}
+                    onMove={updateToken}
+                    onSelect={selectToken}
+                    onMoveAction={activateMoveGuide}
+                    isSelected={selectedTokenId === token.id}
+                    showMoveGuide={moveGuideTokenId === token.id}
+                  />
                 ))}
               </Layer>
             </Stage>
@@ -124,7 +161,12 @@ export default function App() {
             </p>
             <ul className="mt-6 grid list-none gap-3.5 p-0">
               {orderedTokens.map((token) => (
-                <TokenRow key={token.id} token={token} />
+                <TokenRow
+                  key={token.id}
+                  token={token}
+                  isSelected={selectedTokenId === token.id}
+                  onSelect={selectToken}
+                />
               ))}
             </ul>
           </GlassCard>

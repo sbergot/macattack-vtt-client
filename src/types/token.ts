@@ -13,3 +13,7 @@ export type TokenMoveHandler = (
   tokenId: string,
   position: TokenPosition,
 ) => void;
+
+export type TokenSelectHandler = (tokenId: string) => void;
+
+export type TokenActionHandler = (tokenId: string) => void;
