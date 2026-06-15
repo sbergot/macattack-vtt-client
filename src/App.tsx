@@ -58,14 +58,7 @@ export default function App() {
   };
 
   return (
-    <main
-      className="min-h-screen min-w-80 px-4 py-5 text-slate-200 sm:px-6 sm:py-8"
-      style={{
-        backgroundImage:
-          "radial-gradient(circle at top, rgba(240,165,0,0.18), transparent 28%), linear-gradient(160deg, #09111f 0%, #132238 45%, #1b3146 100%)",
-        fontFamily: "Space Grotesk, sans-serif",
-      }}
-    >
+    <main className="min-h-screen min-w-80 bg-slate-950 px-4 py-5 font-sans text-slate-200 sm:px-6 sm:py-8">
       <section className="mx-auto mb-6 max-w-190">
         <p className="mb-3 text-xs uppercase tracking-widest text-amber-400">
           MacAttack VTT
