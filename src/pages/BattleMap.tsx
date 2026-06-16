@@ -2,14 +2,13 @@ import { useState } from "react";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { Image as KonvaImage, Layer, Stage } from "react-konva";
 import useImage from "use-image";
-import mapImageUrl from "./assets/tactical-map.svg";
-import { GlassCard } from "./components/GlassCard";
-import { Token } from "./components/Token";
-import { TokenRow } from "./components/TokenRow";
-import type { TokenData } from "./types/token";
-import { ZoomControls } from "./components/ZoomControls";
-import { useTokenManager } from "./hooks/useTokenManager";
-import { useMapSettings } from "./hooks/useMapSettings";
+import mapImageUrl from "../assets/tactical-map.svg";
+import { GlassCard } from "../components/GlassCard";
+import { Token } from "../components/Token";
+import type { TokenData } from "../types/token";
+import { ZoomControls } from "../components/ZoomControls";
+import { useTokenManager } from "../hooks/useTokenManager";
+import { useMapSettings } from "../hooks/useMapSettings";
 
 const initialTokens: TokenData[] = [
   { id: "alpha", label: "A", color: "#f25f5c", x: 220, y: 180, angle: 0 },
@@ -17,7 +16,7 @@ const initialTokens: TokenData[] = [
   { id: "charlie", label: "C", color: "#70c1b3", x: 760, y: 510, angle: 225 },
 ];
 
-export default function App() {
+export default function BattleMap() {
   const { mapWidth, mapHeight, zoomStep, zoomMin, zoomMax } = useMapSettings();
   const [zoom, setZoom] = useState<number>(1);
   const [mapImage] = useImage(mapImageUrl);
@@ -94,29 +93,24 @@ export default function App() {
         <aside className="top-8 xl:col-span-1 xl:sticky">
           <GlassCard className="p-6">
             <h2 className="mt-0">Token Coordinates</h2>
-            <div className="mt-4 rounded-lg border border-emerald-400/30 bg-slate-900/80 p-3">
-              <p className="m-0 text-xs font-semibold uppercase tracking-wide text-emerald-300">
-                tokenSelection (debug)
-              </p>
-              <pre className="m-0 mt-2 overflow-x-auto text-xs text-emerald-100">
-                {JSON.stringify(tokenSelection, null, 2)}
-              </pre>
-            </div>
-            <ul className="mt-6 grid list-none gap-3.5 p-0">
-              {orderedTokens.map((token) => (
-                <TokenRow
-                  key={token.id}
-                  token={token}
-                  isSelected={tokenSelection?.tokenId === token.id}
-                  onSelect={selectToken}
-                />
-              ))}
-            </ul>
+            <Debug label="Token Data" value={orderedTokens} />
+            <Debug label="Token Selection" value={tokenSelection} />
           </GlassCard>
         </aside>
       </section>
     </main>
   );
+}
+
+function Debug({ label, value }: { label: string; value: unknown }) {
+  return <div className="mt-4 rounded-lg border border-emerald-400/30 bg-slate-900/80 p-3">
+    <p className="m-0 text-xs font-semibold uppercase tracking-wide text-emerald-300">
+      {label}
+    </p>
+    <pre className="m-0 mt-2 overflow-x-auto text-xs text-emerald-100">
+      {JSON.stringify(value, null, 2)}
+    </pre>
+  </div>;
 }
 
 function Intro() {
