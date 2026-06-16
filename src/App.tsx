@@ -8,11 +8,8 @@ import { Token } from "./components/Token";
 import { TokenRow } from "./components/TokenRow";
 import type { TokenData } from "./types/token";
 import { ZoomControls } from "./components/ZoomControls";
-import { useTokenManager } from "./useTokenManager";
-
-const MAP_WIDTH = 1600;
-const MAP_HEIGHT = 900;
-export const ZOOM_STEP = 1.15;
+import { useTokenManager } from "./hooks/useTokenManager";
+import { useMapSettings } from "./hooks/useMapSettings";
 
 const initialTokens: TokenData[] = [
   { id: "alpha", label: "A", color: "#f25f5c", x: 220, y: 180, angle: 0 },
@@ -20,24 +17,16 @@ const initialTokens: TokenData[] = [
   { id: "charlie", label: "C", color: "#70c1b3", x: 760, y: 510, angle: 225 },
 ];
 
-function clampZoom(nextZoom: number): number {
-  const ZOOM_MIN = 0.5;
-  const ZOOM_MAX = 2.5;
-
-  return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, nextZoom));
-}
-
 export default function App() {
+  const { mapWidth, mapHeight, zoomStep, zoomMin, zoomMax } =
+    useMapSettings();
   const [zoom, setZoom] = useState<number>(1);
   const [mapImage] = useImage(mapImageUrl);
 
   const {
     orderedTokens,
-    selectedTokenId,
-    moveGuideTokenId,
-    rotateGuideTokenId,
-    moveGuideOrigin,
-    updateToken,
+    tokenSelection,
+      updateToken,
     updateTokenAngle,
     selectToken,
     activateMoveGuide,
@@ -48,29 +37,18 @@ export default function App() {
   } = useTokenManager(initialTokens);
 
   const applyZoom = (nextZoom: number) => {
-    setZoom(clampZoom(nextZoom));
+    setZoom(Math.min(zoomMax, Math.max(zoomMin, nextZoom)));
   };
 
   const handleWheel = (event: KonvaEventObject<WheelEvent>) => {
     event.evt.preventDefault();
-    const direction = event.evt.deltaY > 0 ? 1 / ZOOM_STEP : ZOOM_STEP;
+    const direction = event.evt.deltaY > 0 ? 1 / zoomStep : zoomStep;
     applyZoom(zoom * direction);
   };
 
   return (
     <main className="min-h-screen min-w-80 bg-slate-950 px-4 py-5 font-sans text-slate-200 sm:px-6 sm:py-8">
-      <section className="mx-auto mb-6 max-w-190">
-        <p className="mb-3 text-xs uppercase tracking-widest text-amber-400">
-          MacAttack VTT
-        </p>
-        <h1 className="text-4xl leading-none sm:text-5xl lg:text-7xl">
-          Drag tokens across the battlefield and track exact coordinates.
-        </h1>
-        <p className="max-w-2xl text-slate-200/85">
-          This demo keeps token positions in React state, renders the map with
-          Konva, and supports zoom via the mouse wheel or explicit controls.
-        </p>
-      </section>
+      <Intro />
 
       <section className="mx-auto grid max-w-360 grid-cols-1 items-start gap-6 xl:grid-cols-4">
         <GlassCard className="p-4.5 xl:col-span-3">
@@ -78,36 +56,33 @@ export default function App() {
 
           <div className="overflow-auto rounded-3xl border border-white/10 bg-slate-950/90">
             <Stage
-              width={MAP_WIDTH * zoom}
-              height={MAP_HEIGHT * zoom}
+              width={mapWidth * zoom}
+              height={mapHeight * zoom}
               scaleX={zoom}
               scaleY={zoom}
               onWheel={handleWheel}
               onMouseDown={clearSelection}
               onTouchStart={clearSelection}
             >
-              <Layer>
+              <Layer listening={false}>
                 <KonvaImage
                   image={mapImage}
-                  width={MAP_WIDTH}
-                  height={MAP_HEIGHT}
+                  width={mapWidth}
+                  height={mapHeight}
                   cornerRadius={24}
                 />
+              </Layer>
+              <Layer>
                 {orderedTokens.map((token) => (
                   <Token
                     key={token.id}
                     token={token}
+                    tokenSelection={tokenSelection}
                     onMove={updateToken}
                     onRotate={updateTokenAngle}
                     onSelect={selectToken}
                     onMoveAction={activateMoveGuide}
                     onRotateAction={activateRotateGuide}
-                    isSelected={selectedTokenId === token.id}
-                    showMoveGuide={moveGuideTokenId === token.id}
-                    showRotateGuide={rotateGuideTokenId === token.id}
-                    guideOrigin={
-                      moveGuideTokenId === token.id ? moveGuideOrigin : null
-                    }
                     onMoveGuideEnd={completeMoveGuide}
                     onRotateGuideEnd={completeRotateGuide}
                   />
@@ -124,12 +99,20 @@ export default function App() {
               Drag any token on the map to update its position in state.
               Orientation is stored as degrees clockwise from the top direction.
             </p>
+            <div className="mt-4 rounded-lg border border-emerald-400/30 bg-slate-900/80 p-3">
+              <p className="m-0 text-xs font-semibold uppercase tracking-wide text-emerald-300">
+                tokenSelection (debug)
+              </p>
+              <pre className="m-0 mt-2 overflow-x-auto text-xs text-emerald-100">
+                {JSON.stringify(tokenSelection, null, 2)}
+              </pre>
+            </div>
             <ul className="mt-6 grid list-none gap-3.5 p-0">
               {orderedTokens.map((token) => (
                 <TokenRow
                   key={token.id}
                   token={token}
-                  isSelected={selectedTokenId === token.id}
+                  isSelected={tokenSelection.tokenId === token.id}
                   onSelect={selectToken}
                 />
               ))}
@@ -139,5 +122,13 @@ export default function App() {
       </section>
     </main>
   );
+}
+
+function Intro() {
+  return <section className="mx-auto mb-6 max-w-190">
+    <h1 className="text-2xl uppercase tracking-widest text-amber-400">
+      MacAttack VTT
+    </h1>
+  </section>;
 }
 

@@ -7,11 +7,18 @@ export type TokenData = {
   angle: number;
 };
 
-export type TokenPosition = Pick<TokenData, "x" | "y">;
+export interface Point {
+  x: number;
+  y: number;
+}
+
+export type TokenSelection = {
+  tokenId: string | null;
+} & ({ mode: "move"; origin: Point } | { mode: "rotate" } | { mode: null });
 
 export type TokenMoveHandler = (
   tokenId: string,
-  position: TokenPosition,
+  position: Point,
 ) => void;
 
 export type TokenSelectHandler = (tokenId: string) => void;

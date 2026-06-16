@@ -4,17 +4,15 @@ import type {
   TokenActionHandler,
   TokenAngleHandler,
   TokenData,
-  TokenPosition,
+  Point,
   TokenSelectHandler,
-} from "./types/token";
+  TokenSelection,
+} from "../types/token";
 
 type UseTokenManagerResult = {
   orderedTokens: TokenData[];
-  selectedTokenId: string | null;
-  moveGuideTokenId: string | null;
-  rotateGuideTokenId: string | null;
-  moveGuideOrigin: TokenPosition | null;
-  updateToken: (tokenId: string, position: TokenPosition) => void;
+  tokenSelection: TokenSelection;
+  updateToken: (tokenId: string, position: Point) => void;
   updateTokenAngle: TokenAngleHandler;
   selectToken: TokenSelectHandler;
   activateMoveGuide: TokenActionHandler;
@@ -24,16 +22,14 @@ type UseTokenManagerResult = {
   clearSelection: (event: KonvaEventObject<MouseEvent | TouchEvent>) => void;
 };
 
-export function useTokenManager(initialTokens: TokenData[]): UseTokenManagerResult {
+export function useTokenManager(
+  initialTokens: TokenData[],
+): UseTokenManagerResult {
   const [tokens, setTokens] = useState<TokenData[]>(initialTokens);
-  const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
-  const [moveGuideTokenId, setMoveGuideTokenId] = useState<string | null>(null);
-  const [rotateGuideTokenId, setRotateGuideTokenId] = useState<string | null>(
-    null,
-  );
-  const [moveGuideOrigin, setMoveGuideOrigin] = useState<TokenPosition | null>(
-    null,
-  );
+  const [tokenSelection, setTokenSelection] = useState<TokenSelection>({
+    tokenId: null,
+    mode: null,
+  });
 
   const orderedTokens = useMemo(
     () =>
@@ -43,7 +39,7 @@ export function useTokenManager(initialTokens: TokenData[]): UseTokenManagerResu
     [tokens],
   );
 
-  const updateToken = (tokenId: string, position: TokenPosition) => {
+  const updateToken = (tokenId: string, position: Point) => {
     setTokens((currentTokens) =>
       currentTokens.map((token) =>
         token.id === tokenId ? { ...token, ...position } : token,
@@ -60,74 +56,57 @@ export function useTokenManager(initialTokens: TokenData[]): UseTokenManagerResu
   };
 
   const selectToken: TokenSelectHandler = (tokenId) => {
-    if (tokenId !== selectedTokenId) {
-      setMoveGuideTokenId(null);
-      setRotateGuideTokenId(null);
-      setMoveGuideOrigin(null);
+    if (tokenId !== tokenSelection.tokenId) {
+      setTokenSelection({ tokenId, mode: null });
+      return;
     }
-    setSelectedTokenId(tokenId);
+
+    setTokenSelection({ tokenId, mode: null });
   };
 
   const activateMoveGuide: TokenActionHandler = (tokenId) => {
+    console.debug("Activating move guide for token:", tokenId);
     const activeToken = tokens.find((token) => token.id === tokenId);
 
-    setSelectedTokenId(tokenId);
-    setMoveGuideTokenId(tokenId);
-    setRotateGuideTokenId(null);
-    setMoveGuideOrigin(
-      activeToken
-        ? {
-            x: activeToken.x,
-            y: activeToken.y,
-          }
-        : null,
-    );
+    setTokenSelection({
+      tokenId,
+      mode: "move",
+      origin: activeToken
+        ? { x: activeToken.x, y: activeToken.y }
+        : { x: 0, y: 0 },
+    });
   };
 
   const activateRotateGuide: TokenActionHandler = (tokenId) => {
-    setSelectedTokenId(tokenId);
-    setRotateGuideTokenId(tokenId);
-    setMoveGuideTokenId(null);
-    setMoveGuideOrigin(null);
+    console.debug("Activating rotate guide for token:", tokenId);
+    setTokenSelection({ tokenId, mode: "rotate" });
   };
 
   const completeMoveGuide = (tokenId: string) => {
-    if (moveGuideTokenId === tokenId) {
-      setMoveGuideTokenId(null);
-      setMoveGuideOrigin(null);
-    }
-
-    if (selectedTokenId === tokenId) {
-      setSelectedTokenId(null);
+    if (tokenSelection.tokenId === tokenId && tokenSelection.mode === "move") {
+      setTokenSelection({ tokenId: null, mode: null });
     }
   };
 
   const completeRotateGuide = (tokenId: string) => {
-    if (rotateGuideTokenId === tokenId) {
-      setRotateGuideTokenId(null);
-    }
-
-    if (selectedTokenId === tokenId) {
-      setSelectedTokenId(null);
+    if (
+      tokenSelection.tokenId === tokenId &&
+      tokenSelection.mode === "rotate"
+    ) {
+      setTokenSelection({ tokenId: null, mode: null });
     }
   };
 
   const clearSelection = (event: KonvaEventObject<MouseEvent | TouchEvent>) => {
     const stage = event.target.getStage();
     if (event.target === stage) {
-      setSelectedTokenId(null);
-      setMoveGuideTokenId(null);
-      setRotateGuideTokenId(null);
-      setMoveGuideOrigin(null);
+      setTokenSelection({ tokenId: null, mode: null });
     }
   };
 
   return {
     orderedTokens,
-    selectedTokenId,
-    moveGuideTokenId,
-    rotateGuideTokenId,
-    moveGuideOrigin,
+    tokenSelection,
     updateToken,
     updateTokenAngle,
     selectToken,

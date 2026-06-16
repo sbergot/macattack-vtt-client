@@ -1,12 +1,15 @@
 import { useRef } from "react";
-import { Circle, Group, Line, Rect, Text } from "react-konva";
+import { Circle, Group, Line, Text } from "react-konva";
 import type {
   TokenActionHandler,
   TokenAngleHandler,
   TokenData,
   TokenMoveHandler,
   TokenSelectHandler,
+  Point,
+  TokenSelection,
 } from "../types/token";
+import { TokenActionButton } from "./TokenActionButton";
 
 type TokenProps = {
   token: TokenData;
@@ -15,72 +18,39 @@ type TokenProps = {
   onSelect: TokenSelectHandler;
   onMoveAction: TokenActionHandler;
   onRotateAction: TokenActionHandler;
-  isSelected: boolean;
-  showMoveGuide: boolean;
-  showRotateGuide: boolean;
-  guideOrigin: { x: number; y: number } | null;
+  tokenSelection: TokenSelection;
   onMoveGuideEnd: (tokenId: string) => void;
   onRotateGuideEnd: (tokenId: string) => void;
 };
 
-type TokenActionButtonProps = {
-  x: number;
-  y: number;
-  label: string;
-  onClick?: () => void;
-};
-
-function TokenActionButton({ x, y, label, onClick }: TokenActionButtonProps) {
-  return (
-    <Group x={x} y={y} onClick={onClick} onTap={onClick}>
-      <Rect
-        width={68}
-        height={24}
-        cornerRadius={12}
-        fill="rgba(15, 23, 42, 0.95)"
-        stroke="rgba(255,255,255,0.35)"
-        strokeWidth={1}
-      />
-      <Text
-        x={14}
-        y={6}
-        text={label}
-        fontSize={11}
-        fontStyle="600"
-        fill="#f8fafc"
-      />
-    </Group>
-  );
-}
-
 export function Token({
   token,
+  tokenSelection,
   onMove,
   onRotate,
   onSelect,
   onMoveAction,
   onRotateAction,
-  isSelected,
-  showMoveGuide,
-  showRotateGuide,
-  guideOrigin,
   onMoveGuideEnd,
   onRotateGuideEnd,
 }: TokenProps) {
   const ROTATE_RADIUS = 78;
-  const dragStartPosition = useRef<{ x: number; y: number } | null>(null);
   const angleRad = (token.angle * Math.PI) / 180;
   const rotateHandlePosition = {
     x: Math.sin(angleRad) * ROTATE_RADIUS,
     y: -Math.cos(angleRad) * ROTATE_RADIUS,
   };
 
+  const isSelected = tokenSelection.tokenId === token.id;
+  const showMoveGuide = isSelected && tokenSelection.mode === "move";
+  const showRotateGuide = isSelected && tokenSelection.mode === "rotate";
+
   return (
     <>
-      {isSelected && showMoveGuide && guideOrigin ? (
+      {isSelected && showMoveGuide ? (
         <Line
-          x={guideOrigin.x}
-          y={guideOrigin.y}
+          x={tokenSelection.origin.x}
+          y={tokenSelection.origin.y}
           points={[0, -450, 0, 450]}
           stroke="#f59e0b"
           strokeWidth={3}
@@ -90,44 +60,7 @@ export function Token({
         />
       ) : null}
       {isSelected && showRotateGuide ? (
-        <Group x={token.x} y={token.y}>
-          <Circle
-            radius={ROTATE_RADIUS}
-            stroke="#f59e0b"
-            strokeWidth={2}
-            opacity={0.9}
-            dash={[8, 6]}
-          />
-          <Line
-            points={[0, 0, rotateHandlePosition.x, rotateHandlePosition.y]}
-            stroke="#f59e0b"
-            strokeWidth={2}
-            opacity={0.9}
-          />
-          <Circle
-            x={rotateHandlePosition.x}
-            y={rotateHandlePosition.y}
-            radius={11}
-            fill="#f59e0b"
-            stroke="#fef3c7"
-            strokeWidth={2}
-            draggable
-            onDragMove={(event) => {
-              const localX = event.target.x();
-              const localY = event.target.y();
-              const nextAngle =
-                ((Math.atan2(localX, -localY) * 180) / Math.PI + 360) % 360;
-
-              const snappedX = Math.sin((nextAngle * Math.PI) / 180) * ROTATE_RADIUS;
-              const snappedY = -Math.cos((nextAngle * Math.PI) / 180) * ROTATE_RADIUS;
-              event.target.position({ x: snappedX, y: snappedY });
-              onRotate(token.id, Math.round(nextAngle));
-            }}
-            onDragEnd={() => {
-              onRotateGuideEnd(token.id);
-            }}
-          />
-        </Group>
+        RotateGuide(token, ROTATE_RADIUS, rotateHandlePosition, onRotate, onRotateGuideEnd)
       ) : null}
       <Group
         x={token.x}
@@ -137,55 +70,25 @@ export function Token({
         draggable={showMoveGuide}
         onClick={() => onSelect(token.id)}
         onTap={() => onSelect(token.id)}
-        onDragStart={(event) => {
-          dragStartPosition.current = {
-            x: event.target.x(),
-            y: event.target.y(),
-          };
-        }}
         onDragMove={(event) => {
-          if (showMoveGuide) {
-            const start = guideOrigin ??
-              dragStartPosition.current ?? {
-                x: token.x,
-                y: token.y,
-              };
-
-            const angleRad = (token.angle * Math.PI) / 180;
-            const axis = {
-              x: Math.sin(angleRad),
-              y: -Math.cos(angleRad),
-            };
-
-            const delta = {
-              x: event.target.x() - start.x,
-              y: event.target.y() - start.y,
-            };
-
-            const projectedDistance = delta.x * axis.x + delta.y * axis.y;
-            const constrained = {
-              x: start.x + axis.x * projectedDistance,
-              y: start.y + axis.y * projectedDistance,
-            };
-
-            event.target.position(constrained);
-            onMove(token.id, {
-              x: Math.round(constrained.x),
-              y: Math.round(constrained.y),
-            });
+          if (!showMoveGuide) {
             return;
           }
+          const start = tokenSelection.origin;
 
-          onMove(token.id, {
-            x: Math.round(event.target.x()),
-            y: Math.round(event.target.y()),
-          });
+          const constrained = constrainOnAngle(
+            token.angle,
+            { x: event.target.x(), y: event.target.y() },
+            start,
+          );
+
+          event.target.position(constrained);
+          onMove(token.id, constrained);
         }}
         onDragEnd={() => {
           if (showMoveGuide) {
             onMoveGuideEnd(token.id);
           }
-          dragStartPosition.current = null;
         }}
       >
         {isSelected ? (
@@ -210,12 +113,7 @@ export function Token({
           strokeWidth={isSelected ? 5 : 3}
         />
         {isSelected ? (
-          <Circle
-            radius={35}
-            stroke="#fde68a"
-            strokeWidth={3}
-            opacity={0.9}
-          />
+          <Circle radius={35} stroke="#fde68a" strokeWidth={3} opacity={0.9} />
         ) : null}
         {isSelected && !showMoveGuide && !showRotateGuide ? (
           <>
@@ -252,4 +150,61 @@ export function Token({
       </Group>
     </>
   );
+}
+
+function RotateGuide(token: TokenData, ROTATE_RADIUS: number, rotateHandlePosition: { x: number; y: number; }, onRotate: TokenAngleHandler, onRotateGuideEnd: (tokenId: string) => void) {
+  return <Group x={token.x} y={token.y}>
+    <Circle
+      radius={ROTATE_RADIUS}
+      stroke="#f59e0b"
+      strokeWidth={2}
+      opacity={0.9}
+      dash={[8, 6]} />
+    <Line
+      points={[0, 0, rotateHandlePosition.x, rotateHandlePosition.y]}
+      stroke="#f59e0b"
+      strokeWidth={2}
+      opacity={0.9} />
+    <Circle
+      x={rotateHandlePosition.x}
+      y={rotateHandlePosition.y}
+      radius={11}
+      fill="#f59e0b"
+      stroke="#fef3c7"
+      strokeWidth={2}
+      draggable
+      onDragMove={(event) => {
+        const localX = event.target.x();
+        const localY = event.target.y();
+        const nextAngle = ((Math.atan2(localX, -localY) * 180) / Math.PI + 360) % 360;
+
+        const snappedX = Math.sin((nextAngle * Math.PI) / 180) * ROTATE_RADIUS;
+        const snappedY = -Math.cos((nextAngle * Math.PI) / 180) * ROTATE_RADIUS;
+        event.target.position({ x: snappedX, y: snappedY });
+        onRotate(token.id, Math.round(nextAngle));
+      } }
+      onDragEnd={() => {
+        onRotateGuideEnd(token.id);
+      } } />
+  </Group>;
+}
+
+function constrainOnAngle(angle: number, target: Point, start: Point): Point {
+  const angleRad = (angle * Math.PI) / 180;
+  const axis = {
+    x: Math.sin(angleRad),
+    y: -Math.cos(angleRad),
+  };
+
+  const delta = {
+    x: target.x - start.x,
+    y: target.y - start.y,
+  };
+
+  const projectedDistance = delta.x * axis.x + delta.y * axis.y;
+  const constrained = {
+    x: Math.round(start.x + axis.x * projectedDistance),
+    y: Math.round(start.y + axis.y * projectedDistance),
+  };
+  return constrained;
 }
