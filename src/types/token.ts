@@ -13,13 +13,14 @@ export interface Point {
 }
 
 export type TokenSelection = {
-  tokenId: string | null;
-} & ({ mode: "move"; origin: Point } | { mode: "rotate" } | { mode: null });
+  tokenId: string;
+} & (
+  | { mode: "move"; origin: Point }
+  | { mode: "rotate" }
+  | { mode: "selected" }
+) | null;
 
-export type TokenMoveHandler = (
-  tokenId: string,
-  position: Point,
-) => void;
+export type TokenMoveHandler = (tokenId: string, position: Point) => void;
 
 export type TokenSelectHandler = (tokenId: string) => void;
 

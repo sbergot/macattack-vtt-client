@@ -112,7 +112,7 @@ export default function App() {
                 <TokenRow
                   key={token.id}
                   token={token}
-                  isSelected={tokenSelection.tokenId === token.id}
+                  isSelected={tokenSelection?.tokenId === token.id}
                   onSelect={selectToken}
                 />
               ))}

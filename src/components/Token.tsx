@@ -34,14 +34,7 @@ export function Token({
   onMoveGuideEnd,
   onRotateGuideEnd,
 }: TokenProps) {
-  const ROTATE_RADIUS = 78;
-  const angleRad = (token.angle * Math.PI) / 180;
-  const rotateHandlePosition = {
-    x: Math.sin(angleRad) * ROTATE_RADIUS,
-    y: -Math.cos(angleRad) * ROTATE_RADIUS,
-  };
-
-  const isSelected = tokenSelection.tokenId === token.id;
+  const isSelected = tokenSelection?.tokenId === token.id;
   const showMoveGuide = isSelected && tokenSelection.mode === "move";
   const showRotateGuide = isSelected && tokenSelection.mode === "rotate";
 
@@ -62,8 +55,6 @@ export function Token({
       {showRotateGuide ? (
         <RotateGuide
           token={token}
-          rotateRadius={ROTATE_RADIUS}
-          rotateHandlePosition={rotateHandlePosition}
           onRotate={onRotate}
           onRotateGuideEnd={onRotateGuideEnd}
         />

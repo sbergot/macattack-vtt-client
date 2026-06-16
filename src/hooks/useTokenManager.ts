@@ -26,10 +26,7 @@ export function useTokenManager(
   initialTokens: TokenData[],
 ): UseTokenManagerResult {
   const [tokens, setTokens] = useState<TokenData[]>(initialTokens);
-  const [tokenSelection, setTokenSelection] = useState<TokenSelection>({
-    tokenId: null,
-    mode: null,
-  });
+  const [tokenSelection, setTokenSelection] = useState<TokenSelection>(null);
 
   const orderedTokens = useMemo(
     () =>
@@ -56,12 +53,7 @@ export function useTokenManager(
   };
 
   const selectToken: TokenSelectHandler = (tokenId) => {
-    if (tokenId !== tokenSelection.tokenId) {
-      setTokenSelection({ tokenId, mode: null });
-      return;
-    }
-
-    setTokenSelection({ tokenId, mode: null });
+    setTokenSelection({ tokenId, mode: "selected" });
   };
 
   const activateMoveGuide: TokenActionHandler = (tokenId) => {
@@ -83,24 +75,17 @@ export function useTokenManager(
   };
 
   const completeMoveGuide = (tokenId: string) => {
-    if (tokenSelection.tokenId === tokenId && tokenSelection.mode === "move") {
-      setTokenSelection({ tokenId: null, mode: null });
-    }
+      setTokenSelection(null);
   };
 
   const completeRotateGuide = (tokenId: string) => {
-    if (
-      tokenSelection.tokenId === tokenId &&
-      tokenSelection.mode === "rotate"
-    ) {
-      setTokenSelection({ tokenId: null, mode: null });
-    }
+      setTokenSelection(null);
   };
 
   const clearSelection = (event: KonvaEventObject<MouseEvent | TouchEvent>) => {
     const stage = event.target.getStage();
     if (event.target === stage) {
-      setTokenSelection({ tokenId: null, mode: null });
+      setTokenSelection(null);
     }
   };
 
