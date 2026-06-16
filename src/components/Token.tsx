@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import { Circle, Group, Line, Text } from "react-konva";
 import type {
   TokenActionHandler,
@@ -10,6 +9,7 @@ import type {
   TokenSelection,
 } from "../types/token";
 import { TokenActionButton } from "./TokenActionButton";
+import { RotateGuide } from "./RotateGuide";
 
 type TokenProps = {
   token: TokenData;
@@ -47,7 +47,7 @@ export function Token({
 
   return (
     <>
-      {isSelected && showMoveGuide ? (
+      {showMoveGuide ? (
         <Line
           x={tokenSelection.origin.x}
           y={tokenSelection.origin.y}
@@ -59,8 +59,14 @@ export function Token({
           rotation={token.angle}
         />
       ) : null}
-      {isSelected && showRotateGuide ? (
-        RotateGuide(token, ROTATE_RADIUS, rotateHandlePosition, onRotate, onRotateGuideEnd)
+      {showRotateGuide ? (
+        <RotateGuide
+          token={token}
+          rotateRadius={ROTATE_RADIUS}
+          rotateHandlePosition={rotateHandlePosition}
+          onRotate={onRotate}
+          onRotateGuideEnd={onRotateGuideEnd}
+        />
       ) : null}
       <Group
         x={token.x}
@@ -74,12 +80,11 @@ export function Token({
           if (!showMoveGuide) {
             return;
           }
-          const start = tokenSelection.origin;
 
           const constrained = constrainOnAngle(
             token.angle,
             { x: event.target.x(), y: event.target.y() },
-            start,
+            tokenSelection.origin,
           );
 
           event.target.position(constrained);
@@ -150,43 +155,6 @@ export function Token({
       </Group>
     </>
   );
-}
-
-function RotateGuide(token: TokenData, ROTATE_RADIUS: number, rotateHandlePosition: { x: number; y: number; }, onRotate: TokenAngleHandler, onRotateGuideEnd: (tokenId: string) => void) {
-  return <Group x={token.x} y={token.y}>
-    <Circle
-      radius={ROTATE_RADIUS}
-      stroke="#f59e0b"
-      strokeWidth={2}
-      opacity={0.9}
-      dash={[8, 6]} />
-    <Line
-      points={[0, 0, rotateHandlePosition.x, rotateHandlePosition.y]}
-      stroke="#f59e0b"
-      strokeWidth={2}
-      opacity={0.9} />
-    <Circle
-      x={rotateHandlePosition.x}
-      y={rotateHandlePosition.y}
-      radius={11}
-      fill="#f59e0b"
-      stroke="#fef3c7"
-      strokeWidth={2}
-      draggable
-      onDragMove={(event) => {
-        const localX = event.target.x();
-        const localY = event.target.y();
-        const nextAngle = ((Math.atan2(localX, -localY) * 180) / Math.PI + 360) % 360;
-
-        const snappedX = Math.sin((nextAngle * Math.PI) / 180) * ROTATE_RADIUS;
-        const snappedY = -Math.cos((nextAngle * Math.PI) / 180) * ROTATE_RADIUS;
-        event.target.position({ x: snappedX, y: snappedY });
-        onRotate(token.id, Math.round(nextAngle));
-      } }
-      onDragEnd={() => {
-        onRotateGuideEnd(token.id);
-      } } />
-  </Group>;
 }
 
 function constrainOnAngle(angle: number, target: Point, start: Point): Point {
