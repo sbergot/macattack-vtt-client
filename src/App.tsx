@@ -6,7 +6,6 @@ import mapImageUrl from "./assets/tactical-map.svg";
 import { GlassCard } from "./components/GlassCard";
 import { Token } from "./components/Token";
 import { TokenRow } from "./components/TokenRow";
-import { ZoomButton } from "./components/ZoomButton";
 import type {
   TokenActionHandler,
   TokenAngleHandler,
@@ -14,10 +13,11 @@ import type {
   TokenPosition,
   TokenSelectHandler,
 } from "./types/token";
+import { ZoomControls } from "./components/ZoomControls";
 
 const MAP_WIDTH = 1600;
 const MAP_HEIGHT = 900;
-const ZOOM_STEP = 1.15;
+export const ZOOM_STEP = 1.15;
 
 const initialTokens: TokenData[] = [
   { id: "alpha", label: "A", color: "#f25f5c", x: 220, y: 180, angle: 0 },
@@ -159,23 +159,7 @@ export default function App() {
 
       <section className="mx-auto grid max-w-360 grid-cols-1 items-start gap-6 xl:grid-cols-4">
         <GlassCard className="p-4.5 xl:col-span-3">
-          <div className="mb-4 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-            <div>
-              <p className="m-0 text-xs uppercase tracking-wider text-slate-200/65">
-                Zoom
-              </p>
-              <strong>{Math.round(zoom * 100)}%</strong>
-            </div>
-            <div className="flex gap-3">
-              <ZoomButton onClick={() => applyZoom(zoom / ZOOM_STEP)}>
-                -
-              </ZoomButton>
-              <ZoomButton onClick={() => applyZoom(1)}>Reset</ZoomButton>
-              <ZoomButton onClick={() => applyZoom(zoom * ZOOM_STEP)}>
-                +
-              </ZoomButton>
-            </div>
-          </div>
+          <ZoomControls zoom={zoom} applyZoom={applyZoom} />
 
           <div className="overflow-auto rounded-3xl border border-white/10 bg-slate-950/90">
             <Stage
@@ -241,3 +225,4 @@ export default function App() {
     </main>
   );
 }
+
