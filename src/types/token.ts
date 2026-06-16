@@ -17,3 +17,5 @@ export type TokenMoveHandler = (
 export type TokenSelectHandler = (tokenId: string) => void;
 
 export type TokenActionHandler = (tokenId: string) => void;
+
+export type TokenAngleHandler = (tokenId: string, angle: number) => void;

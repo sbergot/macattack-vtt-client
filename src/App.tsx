@@ -9,6 +9,7 @@ import { TokenRow } from "./components/TokenRow";
 import { ZoomButton } from "./components/ZoomButton";
 import type {
   TokenActionHandler,
+  TokenAngleHandler,
   TokenData,
   TokenPosition,
   TokenSelectHandler,
@@ -36,6 +37,9 @@ export default function App() {
   const [zoom, setZoom] = useState<number>(1);
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [moveGuideTokenId, setMoveGuideTokenId] = useState<string | null>(null);
+  const [rotateGuideTokenId, setRotateGuideTokenId] = useState<string | null>(
+    null,
+  );
   const [moveGuideOrigin, setMoveGuideOrigin] = useState<TokenPosition | null>(
     null,
   );
@@ -61,6 +65,14 @@ export default function App() {
     setZoom(clampZoom(nextZoom));
   };
 
+  const updateTokenAngle: TokenAngleHandler = (tokenId, angle) => {
+    setTokens((currentTokens) =>
+      currentTokens.map((token) =>
+        token.id === tokenId ? { ...token, angle } : token,
+      ),
+    );
+  };
+
   const handleWheel = (event: KonvaEventObject<WheelEvent>) => {
     event.evt.preventDefault();
     const direction = event.evt.deltaY > 0 ? 1 / ZOOM_STEP : ZOOM_STEP;
@@ -70,6 +82,7 @@ export default function App() {
   const selectToken: TokenSelectHandler = (tokenId) => {
     if (tokenId !== selectedTokenId) {
       setMoveGuideTokenId(null);
+      setRotateGuideTokenId(null);
       setMoveGuideOrigin(null);
     }
     setSelectedTokenId(tokenId);
@@ -80,6 +93,7 @@ export default function App() {
 
     setSelectedTokenId(tokenId);
     setMoveGuideTokenId(tokenId);
+    setRotateGuideTokenId(null);
     setMoveGuideOrigin(
       activeToken
         ? {
@@ -88,6 +102,13 @@ export default function App() {
           }
         : null,
     );
+  };
+
+  const activateRotateGuide: TokenActionHandler = (tokenId) => {
+    setSelectedTokenId(tokenId);
+    setRotateGuideTokenId(tokenId);
+    setMoveGuideTokenId(null);
+    setMoveGuideOrigin(null);
   };
 
   const completeMoveGuide = (tokenId: string) => {
@@ -101,11 +122,22 @@ export default function App() {
     }
   };
 
+  const completeRotateGuide = (tokenId: string) => {
+    if (rotateGuideTokenId === tokenId) {
+      setRotateGuideTokenId(null);
+    }
+
+    if (selectedTokenId === tokenId) {
+      setSelectedTokenId(null);
+    }
+  };
+
   const clearSelection = (event: KonvaEventObject<MouseEvent | TouchEvent>) => {
     const stage = event.target.getStage();
     if (event.target === stage) {
       setSelectedTokenId(null);
       setMoveGuideTokenId(null);
+      setRotateGuideTokenId(null);
       setMoveGuideOrigin(null);
     }
   };
@@ -167,14 +199,18 @@ export default function App() {
                     key={token.id}
                     token={token}
                     onMove={updateToken}
+                    onRotate={updateTokenAngle}
                     onSelect={selectToken}
                     onMoveAction={activateMoveGuide}
+                    onRotateAction={activateRotateGuide}
                     isSelected={selectedTokenId === token.id}
                     showMoveGuide={moveGuideTokenId === token.id}
+                    showRotateGuide={rotateGuideTokenId === token.id}
                     guideOrigin={
                       moveGuideTokenId === token.id ? moveGuideOrigin : null
                     }
                     onMoveGuideEnd={completeMoveGuide}
+                    onRotateGuideEnd={completeRotateGuide}
                   />
                 ))}
               </Layer>

@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { Circle, Group, Line, Rect, Text } from "react-konva";
 import type {
   TokenActionHandler,
+  TokenAngleHandler,
   TokenData,
   TokenMoveHandler,
   TokenSelectHandler,
@@ -10,12 +11,16 @@ import type {
 type TokenProps = {
   token: TokenData;
   onMove: TokenMoveHandler;
+  onRotate: TokenAngleHandler;
   onSelect: TokenSelectHandler;
   onMoveAction: TokenActionHandler;
+  onRotateAction: TokenActionHandler;
   isSelected: boolean;
   showMoveGuide: boolean;
+  showRotateGuide: boolean;
   guideOrigin: { x: number; y: number } | null;
   onMoveGuideEnd: (tokenId: string) => void;
+  onRotateGuideEnd: (tokenId: string) => void;
 };
 
 type TokenActionButtonProps = {
@@ -51,14 +56,24 @@ function TokenActionButton({ x, y, label, onClick }: TokenActionButtonProps) {
 export function Token({
   token,
   onMove,
+  onRotate,
   onSelect,
   onMoveAction,
+  onRotateAction,
   isSelected,
   showMoveGuide,
+  showRotateGuide,
   guideOrigin,
   onMoveGuideEnd,
+  onRotateGuideEnd,
 }: TokenProps) {
+  const ROTATE_RADIUS = 78;
   const dragStartPosition = useRef<{ x: number; y: number } | null>(null);
+  const angleRad = (token.angle * Math.PI) / 180;
+  const rotateHandlePosition = {
+    x: Math.sin(angleRad) * ROTATE_RADIUS,
+    y: -Math.cos(angleRad) * ROTATE_RADIUS,
+  };
 
   return (
     <>
@@ -74,12 +89,52 @@ export function Token({
           rotation={token.angle}
         />
       ) : null}
+      {isSelected && showRotateGuide ? (
+        <Group x={token.x} y={token.y}>
+          <Circle
+            radius={ROTATE_RADIUS}
+            stroke="#f59e0b"
+            strokeWidth={2}
+            opacity={0.9}
+            dash={[8, 6]}
+          />
+          <Line
+            points={[0, 0, rotateHandlePosition.x, rotateHandlePosition.y]}
+            stroke="#f59e0b"
+            strokeWidth={2}
+            opacity={0.9}
+          />
+          <Circle
+            x={rotateHandlePosition.x}
+            y={rotateHandlePosition.y}
+            radius={11}
+            fill="#f59e0b"
+            stroke="#fef3c7"
+            strokeWidth={2}
+            draggable
+            onDragMove={(event) => {
+              const localX = event.target.x();
+              const localY = event.target.y();
+              const nextAngle =
+                ((Math.atan2(localX, -localY) * 180) / Math.PI + 360) % 360;
+
+              const snappedX = Math.sin((nextAngle * Math.PI) / 180) * ROTATE_RADIUS;
+              const snappedY = -Math.cos((nextAngle * Math.PI) / 180) * ROTATE_RADIUS;
+              event.target.position({ x: snappedX, y: snappedY });
+              onRotate(token.id, Math.round(nextAngle));
+            }}
+            onDragEnd={() => {
+              onRotateGuideEnd(token.id);
+            }}
+          />
+        </Group>
+      ) : null}
       <Group
         x={token.x}
         y={token.y}
         scaleX={isSelected ? 1.1 : 1}
         scaleY={isSelected ? 1.1 : 1}
-        draggable
+        draggable={showMoveGuide}
         onClick={() => onSelect(token.id)}
         onTap={() => onSelect(token.id)}
         onDragStart={(event) => {
@@ -162,7 +217,7 @@ export function Token({
             opacity={0.9}
           />
         ) : null}
-        {isSelected && !showMoveGuide ? (
+        {isSelected && !showMoveGuide && !showRotateGuide ? (
           <>
             <TokenActionButton
               x={40}
@@ -170,7 +225,12 @@ export function Token({
               label="Move"
               onClick={() => onMoveAction(token.id)}
             />
-            <TokenActionButton x={40} y={4} label="Rotate" />
+            <TokenActionButton
+              x={40}
+              y={4}
+              label="Rotate"
+              onClick={() => onRotateAction(token.id)}
+            />
           </>
         ) : null}
         <Line
