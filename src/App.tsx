@@ -18,15 +18,14 @@ const initialTokens: TokenData[] = [
 ];
 
 export default function App() {
-  const { mapWidth, mapHeight, zoomStep, zoomMin, zoomMax } =
-    useMapSettings();
+  const { mapWidth, mapHeight, zoomStep, zoomMin, zoomMax } = useMapSettings();
   const [zoom, setZoom] = useState<number>(1);
   const [mapImage] = useImage(mapImageUrl);
 
   const {
     orderedTokens,
     tokenSelection,
-      updateToken,
+    updateToken,
     updateTokenAngle,
     selectToken,
     activateMoveGuide,
@@ -95,10 +94,6 @@ export default function App() {
         <aside className="top-8 xl:col-span-1 xl:sticky">
           <GlassCard className="p-6">
             <h2 className="mt-0">Token Coordinates</h2>
-            <p className="text-slate-200/80">
-              Drag any token on the map to update its position in state.
-              Orientation is stored as degrees clockwise from the top direction.
-            </p>
             <div className="mt-4 rounded-lg border border-emerald-400/30 bg-slate-900/80 p-3">
               <p className="m-0 text-xs font-semibold uppercase tracking-wide text-emerald-300">
                 tokenSelection (debug)
@@ -125,10 +120,20 @@ export default function App() {
 }
 
 function Intro() {
-  return <section className="mx-auto mb-6 max-w-190">
-    <h1 className="text-2xl uppercase tracking-widest text-amber-400">
-      MacAttack VTT
-    </h1>
-  </section>;
+  return (
+    <section className="mx-auto mb-6 max-w-190">
+      <h1 className="text-2xl uppercase tracking-widest text-amber-400">
+        MacAttack VTT
+      </h1>
+      <p>
+        Mac Attack is a game by Chris McDowall at{" "}
+        <a
+          href="https://bastionlandpress.com"
+          className="text-amber-400 underline"
+        >
+          bastionlandpress.com
+        </a>
+      </p>
+    </section>
+  );
 }
-

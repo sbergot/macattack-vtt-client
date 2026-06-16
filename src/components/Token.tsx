@@ -11,6 +11,26 @@ import type {
 import { TokenActionButton } from "./TokenActionButton";
 import { RotateGuide } from "./RotateGuide";
 
+function constrainOnAngle(angle: number, target: Point, start: Point): Point {
+  const angleRad = (angle * Math.PI) / 180;
+  const axis = {
+    x: Math.sin(angleRad),
+    y: -Math.cos(angleRad),
+  };
+
+  const delta = {
+    x: target.x - start.x,
+    y: target.y - start.y,
+  };
+
+  const projectedDistance = delta.x * axis.x + delta.y * axis.y;
+  const constrained = {
+    x: Math.round(start.x + axis.x * projectedDistance),
+    y: Math.round(start.y + axis.y * projectedDistance),
+  };
+  return constrained;
+}
+
 type TokenProps = {
   token: TokenData;
   onMove: TokenMoveHandler;
@@ -146,24 +166,4 @@ export function Token({
       </Group>
     </>
   );
-}
-
-function constrainOnAngle(angle: number, target: Point, start: Point): Point {
-  const angleRad = (angle * Math.PI) / 180;
-  const axis = {
-    x: Math.sin(angleRad),
-    y: -Math.cos(angleRad),
-  };
-
-  const delta = {
-    x: target.x - start.x,
-    y: target.y - start.y,
-  };
-
-  const projectedDistance = delta.x * axis.x + delta.y * axis.y;
-  const constrained = {
-    x: Math.round(start.x + axis.x * projectedDistance),
-    y: Math.round(start.y + axis.y * projectedDistance),
-  };
-  return constrained;
 }
