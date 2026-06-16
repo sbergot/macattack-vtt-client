@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { Image as KonvaImage, Layer, Stage } from "react-konva";
 import useImage from "use-image";
@@ -6,14 +6,9 @@ import mapImageUrl from "./assets/tactical-map.svg";
 import { GlassCard } from "./components/GlassCard";
 import { Token } from "./components/Token";
 import { TokenRow } from "./components/TokenRow";
-import type {
-  TokenActionHandler,
-  TokenAngleHandler,
-  TokenData,
-  TokenPosition,
-  TokenSelectHandler,
-} from "./types/token";
+import type { TokenData } from "./types/token";
 import { ZoomControls } from "./components/ZoomControls";
+import { useTokenManager } from "./useTokenManager";
 
 const MAP_WIDTH = 1600;
 const MAP_HEIGHT = 900;
@@ -33,113 +28,33 @@ function clampZoom(nextZoom: number): number {
 }
 
 export default function App() {
-  const [tokens, setTokens] = useState<TokenData[]>(initialTokens);
   const [zoom, setZoom] = useState<number>(1);
-  const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
-  const [moveGuideTokenId, setMoveGuideTokenId] = useState<string | null>(null);
-  const [rotateGuideTokenId, setRotateGuideTokenId] = useState<string | null>(
-    null,
-  );
-  const [moveGuideOrigin, setMoveGuideOrigin] = useState<TokenPosition | null>(
-    null,
-  );
   const [mapImage] = useImage(mapImageUrl);
 
-  const orderedTokens = useMemo(
-    () =>
-      tokens
-        .slice()
-        .sort((left, right) => left.label.localeCompare(right.label)),
-    [tokens],
-  );
-
-  const updateToken = (tokenId: string, position: TokenPosition) => {
-    setTokens((currentTokens) =>
-      currentTokens.map((token) =>
-        token.id === tokenId ? { ...token, ...position } : token,
-      ),
-    );
-  };
+  const {
+    orderedTokens,
+    selectedTokenId,
+    moveGuideTokenId,
+    rotateGuideTokenId,
+    moveGuideOrigin,
+    updateToken,
+    updateTokenAngle,
+    selectToken,
+    activateMoveGuide,
+    activateRotateGuide,
+    completeMoveGuide,
+    completeRotateGuide,
+    clearSelection,
+  } = useTokenManager(initialTokens);
 
   const applyZoom = (nextZoom: number) => {
     setZoom(clampZoom(nextZoom));
-  };
-
-  const updateTokenAngle: TokenAngleHandler = (tokenId, angle) => {
-    setTokens((currentTokens) =>
-      currentTokens.map((token) =>
-        token.id === tokenId ? { ...token, angle } : token,
-      ),
-    );
   };
 
   const handleWheel = (event: KonvaEventObject<WheelEvent>) => {
     event.evt.preventDefault();
     const direction = event.evt.deltaY > 0 ? 1 / ZOOM_STEP : ZOOM_STEP;
     applyZoom(zoom * direction);
-  };
-
-  const selectToken: TokenSelectHandler = (tokenId) => {
-    if (tokenId !== selectedTokenId) {
-      setMoveGuideTokenId(null);
-      setRotateGuideTokenId(null);
-      setMoveGuideOrigin(null);
-    }
-    setSelectedTokenId(tokenId);
-  };
-
-  const activateMoveGuide: TokenActionHandler = (tokenId) => {
-    const activeToken = tokens.find((token) => token.id === tokenId);
-
-    setSelectedTokenId(tokenId);
-    setMoveGuideTokenId(tokenId);
-    setRotateGuideTokenId(null);
-    setMoveGuideOrigin(
-      activeToken
-        ? {
-            x: activeToken.x,
-            y: activeToken.y,
-          }
-        : null,
-    );
-  };
-
-  const activateRotateGuide: TokenActionHandler = (tokenId) => {
-    setSelectedTokenId(tokenId);
-    setRotateGuideTokenId(tokenId);
-    setMoveGuideTokenId(null);
-    setMoveGuideOrigin(null);
-  };
-
-  const completeMoveGuide = (tokenId: string) => {
-    if (moveGuideTokenId === tokenId) {
-      setMoveGuideTokenId(null);
-      setMoveGuideOrigin(null);
-    }
-
-    if (selectedTokenId === tokenId) {
-      setSelectedTokenId(null);
-    }
-  };
-
-  const completeRotateGuide = (tokenId: string) => {
-    if (rotateGuideTokenId === tokenId) {
-      setRotateGuideTokenId(null);
-    }
-
-    if (selectedTokenId === tokenId) {
-      setSelectedTokenId(null);
-    }
-  };
-
-  const clearSelection = (event: KonvaEventObject<MouseEvent | TouchEvent>) => {
-    const stage = event.target.getStage();
-    if (event.target === stage) {
-      setSelectedTokenId(null);
-      setMoveGuideTokenId(null);
-      setRotateGuideTokenId(null);
-      setMoveGuideOrigin(null);
-    }
   };
 
   return (
